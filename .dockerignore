@@ -1,0 +1,16 @@
+.git
+.gitignore
+.vscode
+.venv
+.pytest_cache
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+checkpoints/
+logs/
+predictions/
+data/raw/Training/Images/
+data/raw/*.csv
+MLOps_Refactoring_Report.pdf
+notebooks/

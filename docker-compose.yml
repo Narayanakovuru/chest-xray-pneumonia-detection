@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  train:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pneumonia_trainer
+    volumes:
+      - ./configs:/workspace/configs
+      - ./data:/workspace/data
+      - ./checkpoints:/workspace/checkpoints
+      - ./logs:/workspace/logs
+      - ./predictions:/workspace/predictions
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    ipc: host
