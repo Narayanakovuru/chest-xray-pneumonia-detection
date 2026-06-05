@@ -59,6 +59,14 @@ class PneumoniaDataset(Dataset):
             raise RuntimeError(f"Error reading image {img_path}: {e}")
             
         if self.transform:
-            image = self.transform(image)
+            transformed = self.transform(image)
+            if isinstance(transformed, torch.Tensor):
+                image_tensor = transformed
+            else:
+                from torchvision.transforms.functional import to_tensor
+                image_tensor = to_tensor(transformed)
+        else:
+            from torchvision.transforms.functional import to_tensor
+            image_tensor = to_tensor(image)
             
-        return image, torch.tensor(label, dtype=torch.float32)
+        return image_tensor, torch.tensor(label, dtype=torch.float32)
