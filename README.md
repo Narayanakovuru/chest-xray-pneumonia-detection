@@ -1,27 +1,28 @@
 # Pneumonia Detection Pipeline
 
-[![Code Quality CI](https://github.com/lakshminarayana2409/pneumonia/actions/workflows/ci.yml/badge.svg)](https://github.com/lakshminarayana2409/pneumonia/actions/workflows/ci.yml)
-[![Unit Tests CI](https://github.com/lakshminarayana2409/pneumonia/actions/workflows/tests.yml/badge.svg)](https://github.com/lakshminarayana2409/pneumonia/actions/workflows/tests.yml)
+[![Code Quality CI](https://github.com/Narayanakovuru/pneumonia-detection/actions/workflows/ci.yml/badge.svg)](https://github.com/Narayanakovuru/pneumonia-detection/actions/workflows/ci.yml)
+[![Unit Tests CI](https://github.com/Narayanakovuru/pneumonia-detection/actions/workflows/tests.yml/badge.svg)](https://github.com/Narayanakovuru/pneumonia-detection/actions/workflows/tests.yml)
 
-A production-grade, highly portable, and modular PyTorch deep learning pipeline for Pneumonia Detection in Chest X-Rays. The project features a custom CNN classifier with skip-connections, Squeeze-and-Excitation (SE) blocks, dynamic class-imbalance loss weighting, and a robust training & evaluation suite.
+A production-grade, highly portable, and modular PyTorch deep learning pipeline for Pneumonia Detection in Chest X-Rays. The repository represents a professional Deep Learning Engineer project focusing strictly on backend engineering, reproducible pipelines, and test-driven development.
 
 ---
 
 ## 🚀 Key Features
 
-* **Modular Design:** Adheres strictly to SOLID, DRY, and clean coding principles with proper separation of concerns (configs, data processing, modeling, pipelines, testing).
-* **Flexible Configurations:** Zero hardcoding. All hyperparameters, paths, and configurations are declared in YAML files under `configs/`.
-* **Dynamic Class Imbalance Handling:** Supports dynamic calculation of positive weights for BCE loss (`auto_pos_weight: true`) based on the target class distribution in the training set.
-* **Leakage-Free Augmentation:** Applies data augmentations (e.g. RandomRotation, RandomAffine, ColorJitter) strictly to the training split while keeping validation/test inputs clean.
-* **High Portability:** Fully cross-platform (Windows, Linux, macOS) utilizing standard `pathlib.Path` objects. Contains no environment-specific hardcoded paths.
-* **Fully Runnable Tests:** Synthetic on-the-fly dataset generation allows running `pytest` locally or on CI runners without requiring 30GB dataset downloads.
+* **Modular Core Design:** Adheres strictly to SOLID, DRY, and clean coding principles with strict separation of concerns.
+* **Flexible YAML Configuration:** 100% configuration-driven. All hyperparameters, paths, and training choices are managed in `configs/` without code changes.
+* **Custom CNN Architecture:** Uses an advanced modular network with `Residual Blocks`, `Squeeze-and-Excitation (SE) Blocks` for channel-wise feature calibration, global average pooling, and dropout layers.
+* **Dynamic Loss Weighting:** Auto-calculates `pos_weight` ratio (`negatives / positives`) directly on training splits to counter class imbalance.
+* **Data Leakage Safeguards:** Split boundaries are defined at the metadata level first. Data augmentations (affine, jitter, contrast) are applied strictly inside the training dataloader.
+* **Local Containerization:** Docker support for GPU/CPU training, mapping local mounts for configurations, checkpoints, logs, and outputs.
+* **Automated CI/CD:** GitHub Actions workflows configuration for code formatting check and test automation on push/pull requests.
+* **Sanity Testing Utility:** Script to generate mock datasets locally to run the entire training/inference lifecycle out of the box in seconds.
 
 ---
 
 ## 📂 Project Structure
 
 ```text
-d:/Nanii/Pneumonia Detection/
 ├── .github/workflows/          # CI/CD pipelines (linter, unit tests)
 ├── configs/                    # Declarative YAML configurations
 │   ├── data.yaml               # Paths, image size, split ratios, loaders
@@ -33,7 +34,7 @@ d:/Nanii/Pneumonia Detection/
 ├── checkpoints/                # Model weight file checkpoints (gitignored)
 ├── logs/                       # Running execution logging (gitignored)
 ├── notebooks/                  # Original experimental Jupyter X-Ray notebook
-├── src/                        # Main source code
+├── src/                        # Main source code package
 │   └── pneumonia_detection/
 │       ├── data/               # Custom datasets, augmentations, and split builders
 │       ├── models/             # SEBlock, main pneumoniaCNN model, and BCE loss functions
@@ -43,6 +44,8 @@ d:/Nanii/Pneumonia Detection/
 │       ├── pipelines/          # Training and inference pipeline runners
 │       └── utils/              # Hardware setups, seeding, metrics, logging, checkpoints
 ├── tests/                      # Pytest unit and integration test suite
+├── Dockerfile                  # Container configurations (GPU enabled)
+├── docker-compose.yml          # Container multi-services orchestrator
 ├── requirements.txt            # Package direct dependencies
 ├── setup.py                    # Backward compatibility packaging setup
 └── README.md                   # Setup and execution guide
@@ -53,14 +56,13 @@ d:/Nanii/Pneumonia Detection/
 ## 🛠️ Quick Start Setup
 
 ### Prerequisites
-
-* Python 3.9, 3.10, or 3.11 installed.
-* Virtual environment utility (`venv`).
+* Python 3.9+
+* Virtual environment utility (`venv`)
 
 ### 1. Clone & Initialize Environment
 ```bash
 git clone <repository_url>
-cd "Pneumonia Detection"
+cd pneumonia-detection
 
 # Initialize virtual environment
 python -m venv .venv
@@ -76,65 +78,77 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-### 2. Dataset Placement
-By default, the training pipeline searches for data inside `data/raw/`. Place your Kaggle dataset files as follows:
-
-```text
-data/
-└── raw/
-    ├── stage2_train_metadata.csv
-    └── Training/
-        └── Images/
-            ├── <image_id_1>.png
-            ├── <image_id_2>.png
-            └── ...
+### 2. Run the Sanity Test Dataset Utility
+To test the pipeline execution immediately without downloading the full 30GB Kaggle dataset, run the dummy data generator:
+```bash
+python scripts/generate_dummy_data.py
 ```
-
-*Note: You can easily modify paths, image locations, and CSV structures by editing `configs/data.yaml`.*
+This generates 50 synthetic grayscale X-ray images and the matching `stage2_train_metadata.csv` under `data/raw/` automatically.
 
 ---
 
 ## 🏋️ Running the Training Pipeline
 
-To launch training, validation, early stopping, and automatic checkpoint saving:
-
+To run the training, validation, early stopping, and automatic checkpoint saving:
 ```bash
-python -m src.pneumonia_detection.pipelines.train_pipeline
+python -m src.pneumonia_detection.pipelines.train_pipeline --config configs/train.yaml
 ```
-
-* **Optimizations:** CUDA memory optimizations are activated automatically if a compatible GPU is detected.
-* **Outputs:** The best model weights will save to `checkpoints/best_pneumonia_model.pth` and logging events will print to the console and save in `logs/training.log`.
+* **Imbalance Calculation:** Calculates dynamic weight scale (negative count / positive count) of training classes.
+* **Optimizations:** Automatic GPU (CUDA) memory pinning and allocation if supported hardware is available.
+* **Outputs:** Saves the best and last weights to `checkpoints/` and logs runtime details in `logs/training.log`.
+* **Experiment Metadata:** Generates `checkpoints/experiment_metadata.json` containing total parameters count, hyperparameter states, and history of metrics.
 
 ---
 
 ## 🔍 Running the Inference Pipeline
 
-You can execute predictions using a saved model checkpoint. The inference input targets can be customized:
-
-### Run Inference on a Single Image:
+Use a saved model checkpoint to predict chest X-ray labels:
 ```bash
-python -m src.pneumonia_detection.pipelines.inference_pipeline --input data/raw/Training/Images/sample_xray.png
-```
-*Saves the single prediction details inside `predictions/prediction_sample_xray.json`.*
+# Predict a single image
+python -m src.pneumonia_detection.pipelines.inference_pipeline --config configs/inference.yaml --input data/raw/Training/Images/dummy_patient_0000.png
 
-### Run Inference on a Directory of Images:
-```bash
-python -m src.pneumonia_detection.pipelines.inference_pipeline --input data/raw/Training/Images/
+# Batch predict an entire folder
+python -m src.pneumonia_detection.pipelines.inference_pipeline --config configs/inference.yaml --input data/raw/Training/Images/
 ```
-*Processes all matching PNG files inside the target folder and writes a summary report inside `predictions/batch_predictions.json`.*
+Output results are written directly to `predictions/batch_predictions.json` and logged to `logs/inference.log`.
 
 ---
 
-## 🧪 Running Unit Tests
+## 🐳 Docker Containerized Training
 
-The project includes unit and integration tests covering dataset loading, conversions, models shape verification, trainers weight optimization, and prediction loading.
+You can run the pipeline inside a container with full GPU capability:
+```bash
+# Build and run the training pipeline
+docker-compose up --build
+```
+Host folders (`configs/`, `data/`, `checkpoints/`, `logs/`, `predictions/`) are mounted into the container to persist all weights and predictions.
+
+---
+
+## 🧪 Testing and CI/CD
+
+Unit and integration tests are automated using `pytest`. They cover data transforms, split builders, model layer outputs, trainer optimization loops, and checkpoint states.
 
 ```bash
 # Run all tests
-pytest tests/
+pytest
 
-# Run tests with coverage reporting
-pytest tests/ --cov=src
+# Run tests with coverage report
+pytest --cov=src
 ```
 
+The workflows configured in `.github/workflows/` automatically run linting and the test suite on every commit to GitHub.
 
+---
+
+## 📈 Adapting to the Full Kaggle Dataset
+
+No code changes are required to use the full 30GB Kaggle RSNA Pneumonia Detection dataset:
+1. Download the dataset and place the images and `stage2_train_labels.csv` inside `data/raw/`.
+2. Open `configs/data.yaml` and update the paths:
+   ```yaml
+   data:
+     metadata_csv: "data/raw/stage2_train_labels.csv"
+     image_dir: "data/raw/stage2_train_images"
+   ```
+3. Run the training pipeline command. The pipeline automatically loads the CSV, deduplicates patient IDs, calculates dynamic class weights, and splits the data into stratified subsets.
