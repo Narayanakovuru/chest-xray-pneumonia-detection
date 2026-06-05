@@ -26,8 +26,8 @@ def load_metadata(csv_path: Path) -> pd.DataFrame:
     if not required_cols.issubset(df.columns):
         raise ValueError(f"Metadata CSV is missing one or more required columns: {required_cols}")
         
-    df = df[["patientId", "Target"]]
-    logger.info(f"Loaded DataFrame with shape: {df.shape}")
+    df = df[["patientId", "Target"]].drop_duplicates(subset=["patientId"]).reset_index(drop=True)
+    logger.info(f"Loaded DataFrame with shape: {df.shape} (after removing duplicate patient entries)")
     return df
 
 def get_class_distribution(df: pd.DataFrame) -> Tuple[int, int, float]:
