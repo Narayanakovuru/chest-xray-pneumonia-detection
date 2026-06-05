@@ -40,5 +40,7 @@ include = ["pneumonia_detection*"]
 [tool.pyrefly]
 project-includes = ["src", "tests"]
 search-path = ["."]
-errors = { missing-import = "ignore" }
+
+[tool.pyrefly.errors]
+missing-import = false
 
