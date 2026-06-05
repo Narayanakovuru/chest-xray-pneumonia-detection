@@ -1,0 +1,21 @@
+data:
+  # Paths relative to the project root directory
+  metadata_csv: "data/raw/stage2_train_metadata.csv"
+  image_dir: "data/raw/Training/Images"
+  
+  # Image parameters
+  img_size: [224, 224]
+  num_channels: 1
+  
+  # Splits
+  splits:
+    train: 0.70
+    val: 0.15
+    test: 0.15
+    seed: 42
+    
+  # DataLoader configurations
+  loader:
+    batch_size: 32
+    num_workers: 0
+    pin_memory: true

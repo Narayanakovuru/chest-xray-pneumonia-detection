@@ -1,0 +1,26 @@
+model:
+  name: "pneumoniaCNN"
+  in_channels: 1
+  
+  # Channel configurations for each block
+  stem:
+    out_channels: 64
+  block1:
+    out_channels: 128
+  block2:
+    out_channels: 256
+  block3:
+    out_channels: 512
+  block4:
+    out_channels: 1024
+    
+  # Squeeze-and-Excitation (SE) block config
+  se:
+    reduction: 16
+    
+  # Classifier layer settings
+  classifier:
+    dropout_1: 0.4
+    dropout_2: 0.3
+    hidden_dim: 256
+    out_features: 1

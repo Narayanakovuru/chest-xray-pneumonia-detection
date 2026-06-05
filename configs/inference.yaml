@@ -1,0 +1,11 @@
+inference:
+  # Checkpoint setup
+  checkpoint_path: "checkpoints/best_pneumonia_model.pth"
+  device: "auto"                 # Options: "auto" (will use CUDA if available), "cuda", "cpu"
+  
+  # Decision settings
+  threshold: 0.5
+  
+  # I/O setup
+  output_dir: "predictions"
+  batch_size: 32

@@ -1,0 +1,45 @@
+training:
+  seed: 42
+  epochs: 3
+  
+  # Optimizer setup
+  optimizer:
+    type: "AdamW"
+    lr: 1.0e-4
+    weight_decay: 1.0e-4
+    
+  # Learning rate scheduler
+  scheduler:
+    type: "CosineAnnealingLR"
+    eta_min: 1.0e-6
+    
+  # Loss function configuration
+  loss:
+    type: "BCEWithLogitsLoss"
+    auto_pos_weight: true       # Calculate dynamic pos_weight if true
+    pos_weight: null             # Fixed value if auto_pos_weight is false
+    
+  # Regularization
+  grad_clipping:
+    enabled: true
+    max_norm: 1.0
+    
+  # Early stopping configuration
+  early_stopping:
+    enabled: true
+    patience: 10
+    monitor: "val_loss"          # Can monitor "val_loss", "val_acc", or "val_f1"
+    mode: "min"                  # "min" for loss, "max" for accuracy/f1
+    
+  # Checkpoints and directories
+  checkpoint:
+    dir: "checkpoints"
+    best_filename: "best_pneumonia_model.pth"
+    last_filename: "last_pneumonia_model.pth"
+    resume: false                # Set to true to automatically resume from last checkpoint
+    
+  # Logging
+  logging:
+    dir: "logs"
+    log_file: "training.log"
+    level: "INFO"
