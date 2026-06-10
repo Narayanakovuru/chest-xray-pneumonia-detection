@@ -44,7 +44,7 @@ class Predictor:
         # Reload checkpoint
         checkpoint_path = config["inference"]["checkpoint_path"]
         logger.info(f"Predictor loading weights from: {checkpoint_path}")
-        self.model, _, _, _, _ = load_checkpoint(
+        load_checkpoint(
             checkpoint_path=checkpoint_path,
             model=self.model,
             device=self.device

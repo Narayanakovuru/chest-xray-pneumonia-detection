@@ -41,7 +41,7 @@ def get_criterion(
         else:
             if pos_count == 0:
                 raise ValueError("Positive class count is 0, cannot calculate dynamic pos_weight.")
-            computed_ratio = float(neg_count / pos_count)
+            computed_ratio = neg_count / pos_count
             pos_weight_tensor = torch.tensor([computed_ratio], dtype=torch.float32)
             logger.info(f"Loss criterion configured with DYNAMIC pos_weight: {computed_ratio:.4f}")
     else:

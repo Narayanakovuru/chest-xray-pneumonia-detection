@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.optim as optim
 from torch.utils.data import DataLoader
 from pathlib import Path
 import logging
@@ -24,7 +25,7 @@ class Trainer:
         self,
         model: nn.Module,
         criterion: nn.Module,
-        optimizer: torch.optim.Optimizer,
+        optimizer: optim.Optimizer,
         scheduler: Optional[Any],
         device: torch.device,
         train_loader: DataLoader,
@@ -170,13 +171,17 @@ class Trainer:
         
         if resume_flag and last_ckpt_path.exists():
             logger.info(f"Resuming training from last checkpoint: {last_ckpt_path}")
-            self.model, self.optimizer, self.scheduler, self.start_epoch, loaded_best = load_checkpoint(
+            loaded_model, loaded_opt, loaded_sched, self.start_epoch, loaded_best = load_checkpoint(
                 str(last_ckpt_path),
                 self.model,
                 self.optimizer,
                 self.scheduler,
                 self.device
             )
+            self.model = loaded_model
+            if loaded_opt is not None:
+                self.optimizer = loaded_opt
+            self.scheduler = loaded_sched
             # Retain best metric value if it matches the monitored metric
             # (Note: we reset this if the loader is different, but for continuous run we retain it)
             if loaded_best != 0.0:
@@ -215,13 +220,13 @@ class Trainer:
             # Record epoch results to metrics history
             epoch_results = {
                 "epoch": epoch + 1,
-                "train_loss": float(train_loss),
-                "train_accuracy": float(train_acc),
-                "val_loss": float(val_loss),
-                "val_accuracy": float(val_acc),
-                "val_f1_score": float(val_f1),
-                "val_auc_roc": float(val_auc),
-                "learning_rate": float(current_lr)
+                "train_loss": train_loss,
+                "train_accuracy": train_acc,
+                "val_loss": val_loss,
+                "val_accuracy": val_acc,
+                "val_f1_score": val_f1,
+                "val_auc_roc": val_auc,
+                "learning_rate": current_lr
             }
             self.metrics_history.append(epoch_results)
             self.save_experiment_metadata()

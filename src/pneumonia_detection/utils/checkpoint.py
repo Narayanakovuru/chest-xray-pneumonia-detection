@@ -1,4 +1,6 @@
 import torch
+import torch.nn as nn
+import torch.optim as optim
 from pathlib import Path
 import logging
 from typing import Dict, Any, Tuple, Optional
@@ -31,11 +33,11 @@ def save_checkpoint(
 
 def load_checkpoint(
     checkpoint_path: str,
-    model: torch.nn.Module,
-    optimizer: Optional[torch.optim.Optimizer] = None,
+    model: nn.Module,
+    optimizer: Optional[optim.Optimizer] = None,
     scheduler: Optional[Any] = None,
     device: Optional[torch.device] = None
-) -> Tuple[torch.nn.Module, Optional[torch.optim.Optimizer], Optional[Any], int, float]:
+) -> Tuple[nn.Module, Optional[optim.Optimizer], Optional[Any], int, float]:
     """Load model weight parameters and training stats from a saved checkpoint file.
 
     Args:

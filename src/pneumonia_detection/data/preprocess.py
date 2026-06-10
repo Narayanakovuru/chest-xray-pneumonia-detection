@@ -40,12 +40,12 @@ def get_class_distribution(df: pd.DataFrame) -> Tuple[int, int, float]:
         Tuple[int, int, float]:
             neg_count, pos_count, and pos_weight ratio.
     """
-    neg_count = int((df["Target"] == 0).sum())
-    pos_count = int((df["Target"] == 1).sum())
+    neg_count = (df["Target"] == 0).sum()
+    pos_count = (df["Target"] == 1).sum()
     
     if pos_count == 0:
         raise ValueError("Positive class count is zero. Cannot compute class weights.")
         
-    pos_weight = float(neg_count / pos_count)
+    pos_weight = neg_count / pos_count
     logger.info(f"Class distribution: Negative={neg_count} | Positive={pos_count} | pos_weight ratio={pos_weight:.4f}")
     return neg_count, pos_count, pos_weight

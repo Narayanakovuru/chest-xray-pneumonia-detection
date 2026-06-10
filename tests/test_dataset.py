@@ -1,6 +1,8 @@
+# pyrefly: ignore [missing-import]
 import pytest
 from pathlib import Path
 import pandas as pd
+# pyrefly: ignore [missing-import]
 import torch
 
 from src.pneumonia_detection.data.preprocess import load_metadata, get_class_distribution

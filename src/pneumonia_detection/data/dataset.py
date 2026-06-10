@@ -34,17 +34,17 @@ class PneumoniaDataset(Dataset):
         """
         return len(self.df)
 
-    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
+    def __getitem__(self, index: int) -> Tuple[torch.Tensor, torch.Tensor]:
         """Fetch image and corresponding binary target label.
 
         Args:
-            idx (int): Sample index.
+            index (int): Sample index.
 
         Returns:
             Tuple[torch.Tensor, torch.Tensor]: Preprocessed X-Ray image tensor and target tensor.
         """
-        img_id = self.df.iloc[idx]["patientId"]
-        label = self.df.iloc[idx]["Target"]
+        img_id = self.df.iloc[index]["patientId"]
+        label = self.df.iloc[index]["Target"]
         
         # Assemble file path using pathlib
         img_path = self.img_dir / f"{img_id}.png"

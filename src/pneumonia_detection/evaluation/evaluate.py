@@ -3,6 +3,7 @@ from torch.utils.data import DataLoader
 import logging
 from typing import Dict, Any, Tuple
 from pathlib import Path
+import torch.nn as nn
 
 from src.pneumonia_detection.models.model import pneumoniaCNN
 from src.pneumonia_detection.models.losses import get_criterion

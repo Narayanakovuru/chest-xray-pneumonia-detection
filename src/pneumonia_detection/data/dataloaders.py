@@ -2,7 +2,7 @@ import pandas as pd
 from pathlib import Path
 from typing import Tuple, Dict, Any
 from sklearn.model_selection import train_test_split
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, Dataset
 import logging
 
 from src.pneumonia_detection.data.dataset import PneumoniaDataset
