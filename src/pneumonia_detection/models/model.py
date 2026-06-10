@@ -26,7 +26,9 @@ class pneumoniaCNN(nn.Module):
         super(pneumoniaCNN, self).__init__()
         
         # Load hyperparameters from config or default values
-        model_config = config.get("model", {}) if config is not None else {}
+        model_config = {}
+        if config is not None:
+            model_config = config.get("model", {}) or {}
         
         in_channels = model_config.get("in_channels", 1)
         
