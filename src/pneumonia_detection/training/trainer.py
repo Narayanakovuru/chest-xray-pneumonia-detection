@@ -74,7 +74,16 @@ class Trainer:
         self.es_enabled = es_config.get("enabled", True)
         self.es_patience = es_config.get("patience", 10)
         self.es_monitor = es_config.get("monitor", "val_loss")
-        self.es_mode = es_config.get("mode", "min")
+        
+        # Auto-align mode if not explicitly set
+        if "mode" in es_config:
+            self.es_mode = es_config["mode"]
+        else:
+            if self.es_monitor in ("val_acc", "val_accuracy", "val_f1", "val_f1_score", "val_auc", "val_auc_roc"):
+                self.es_mode = "max"
+            else:
+                self.es_mode = "min"
+                
         self.es_counter = 0
         
         # Initialize tracking metrics
@@ -246,7 +255,20 @@ class Trainer:
             
             # Check if validation metric improved
             is_better = False
-            monitored_val = val_loss if self.es_monitor == "val_loss" else (val_acc if self.es_monitor == "val_acc" else val_f1)
+            
+            # Map es_monitor to the actual metric value
+            if self.es_monitor == "val_loss":
+                monitored_val = val_loss
+            elif self.es_monitor in ("val_acc", "val_accuracy"):
+                monitored_val = val_acc
+            elif self.es_monitor in ("val_f1", "val_f1_score"):
+                monitored_val = val_f1
+            elif self.es_monitor in ("val_auc", "val_auc_roc"):
+                monitored_val = val_auc
+            else:
+                logger.warning(f"Unknown monitor metric '{self.es_monitor}'. Defaulting to val_loss.")
+                monitored_val = val_loss
+                self.es_mode = "min"
             
             if self.es_mode == "min":
                 if monitored_val < self.best_metric_value:

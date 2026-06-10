@@ -13,6 +13,7 @@ from src.pneumonia_detection.utils.logging import configure_logger
 from src.pneumonia_detection.utils.seed import set_seed
 from src.pneumonia_detection.utils.device import setup_device
 from src.pneumonia_detection.data.preprocess import load_metadata, get_class_distribution
+from src.pneumonia_detection.data.dataset import PneumoniaDataset
 from src.pneumonia_detection.data.dataloaders import build_dataloaders
 from src.pneumonia_detection.models.model import pneumoniaCNN
 from src.pneumonia_detection.models.losses import get_criterion
@@ -73,11 +74,12 @@ def run_training_pipeline(config_dir: str = "configs") -> None:
             
         train_loader, val_loader, test_loader = build_dataloaders(df, img_dir, config)
         
-        # Calculate training split imbalance counts for BCE weights accuracy
-        # (This is more accurate as we only count the training subset class distribution)
-        train_targets = [int(label.item()) for _, label in train_loader.dataset]
-        t_neg = train_targets.count(0)
-        t_pos = train_targets.count(1)
+        if not isinstance(train_loader.dataset, PneumoniaDataset):
+            raise TypeError("Expected train_loader.dataset to be an instance of PneumoniaDataset")
+            
+        train_df = train_loader.dataset.df
+        t_neg = (train_df["Target"] == 0).sum()
+        t_pos = (train_df["Target"] == 1).sum()
         logger.info(f"Training split imbalance - Negatives: {t_neg} | Positives: {t_pos}")
         
         # 8. Instantiate Model

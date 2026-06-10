@@ -5,7 +5,7 @@ training:
   # Optimizer setup
   optimizer:
     type: "AdamW"
-    lr: 1.0e-4
+    lr: 5.0e-5
     weight_decay: 1.0e-4
     
   # Learning rate scheduler
@@ -15,9 +15,9 @@ training:
     
   # Loss function configuration
   loss:
-    type: "BCEWithLogitsLoss"
-    auto_pos_weight: true       # Calculate dynamic pos_weight if true
-    pos_weight: null             # Fixed value if auto_pos_weight is false
+    type: "FocalLoss"
+    alpha: 0.5                  # Weight factor for positive class
+    gamma: 2.0                   # Focusing parameter for hard examples
     
   # Regularization
   grad_clipping:

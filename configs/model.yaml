@@ -4,15 +4,15 @@ model:
   
   # Channel configurations for each block
   stem:
-    out_channels: 64
+    out_channels: 32
   block1:
-    out_channels: 128
+    out_channels: 64
   block2:
-    out_channels: 256
+    out_channels: 128
   block3:
-    out_channels: 512
+    out_channels: 256
   block4:
-    out_channels: 1024
+    out_channels: 512
     
   # Squeeze-and-Excitation (SE) block config
   se:

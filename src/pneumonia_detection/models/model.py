@@ -36,19 +36,19 @@ class pneumoniaCNN(nn.Module):
         se_reduction = se_config.get("reduction", 16)
         
         stem_config = model_config.get("stem", {}) or {}
-        stem_out = stem_config.get("out_channels", 64)
+        stem_out = stem_config.get("out_channels", 32)
         
         b1_config = model_config.get("block1", {}) or {}
-        c1 = b1_config.get("out_channels", 128)
+        c1 = b1_config.get("out_channels", 64)
         
         b2_config = model_config.get("block2", {}) or {}
-        c2 = b2_config.get("out_channels", 256)
+        c2 = b2_config.get("out_channels", 128)
         
         b3_config = model_config.get("block3", {}) or {}
-        c3 = b3_config.get("out_channels", 512)
+        c3 = b3_config.get("out_channels", 256)
         
         b4_config = model_config.get("block4", {}) or {}
-        c4 = b4_config.get("out_channels", 1024)
+        c4 = b4_config.get("out_channels", 512)
         
         cls_config = model_config.get("classifier", {}) or {}
         drop_1 = cls_config.get("dropout_1", 0.4)
@@ -67,7 +67,7 @@ class pneumoniaCNN(nn.Module):
             nn.MaxPool2d(kernel_size=2, stride=2)
         )
 
-        # ── RESIDUAL BLOCK 1 (64 -> 128 channels) ─────────────────────────
+        # ── RESIDUAL BLOCK 1 (32 -> 64 channels) ──────────────────────────
         self.block1 = nn.Sequential(
             nn.Conv2d(stem_out, c1, kernel_size=3, padding=1),
             nn.BatchNorm2d(c1),
@@ -81,9 +81,9 @@ class pneumoniaCNN(nn.Module):
             nn.BatchNorm2d(c1)
         )
 
-        # ── RESIDUAL BLOCK 2 (128 -> 256 channels) ────────────────────────
+        # ── RESIDUAL BLOCK 2 (64 -> 128 channels, downsample) ─────────────
         self.block2 = nn.Sequential(
-            nn.Conv2d(c1, c2, kernel_size=3, padding=1),
+            nn.Conv2d(c1, c2, kernel_size=3, padding=1, stride=2),
             nn.BatchNorm2d(c2),
             nn.SiLU(inplace=True),
             nn.Conv2d(c2, c2, kernel_size=3, padding=1),
@@ -91,13 +91,13 @@ class pneumoniaCNN(nn.Module):
         )
         self.block2_se = SEBlock(c2, reduction=se_reduction)
         self.block2_skip = nn.Sequential(
-            nn.Conv2d(c1, c2, kernel_size=1),
+            nn.Conv2d(c1, c2, kernel_size=1, stride=2),
             nn.BatchNorm2d(c2)
         )
 
-        # ── RESIDUAL BLOCK 3 (256 -> 512 channels) ────────────────────────
+        # ── RESIDUAL BLOCK 3 (128 -> 256 channels, downsample) ─────────────
         self.block3 = nn.Sequential(
-            nn.Conv2d(c2, c3, kernel_size=3, padding=1),
+            nn.Conv2d(c2, c3, kernel_size=3, padding=1, stride=2),
             nn.BatchNorm2d(c3),
             nn.SiLU(inplace=True),
             nn.Conv2d(c3, c3, kernel_size=3, padding=1),
@@ -105,13 +105,13 @@ class pneumoniaCNN(nn.Module):
         )
         self.block3_se = SEBlock(c3, reduction=se_reduction)
         self.block3_skip = nn.Sequential(
-            nn.Conv2d(c2, c3, kernel_size=1),
+            nn.Conv2d(c2, c3, kernel_size=1, stride=2),
             nn.BatchNorm2d(c3)
         )
 
-        # ── RESIDUAL BLOCK 4 (512 -> 1024 channels) ───────────────────────
+        # ── RESIDUAL BLOCK 4 (256 -> 512 channels, downsample) ─────────────
         self.block4 = nn.Sequential(
-            nn.Conv2d(c3, c4, kernel_size=3, padding=1),
+            nn.Conv2d(c3, c4, kernel_size=3, padding=1, stride=2),
             nn.BatchNorm2d(c4),
             nn.SiLU(inplace=True),
             nn.Conv2d(c4, c4, kernel_size=3, padding=1),
@@ -119,7 +119,7 @@ class pneumoniaCNN(nn.Module):
         )
         self.block4_se = SEBlock(c4, reduction=se_reduction)
         self.block4_skip = nn.Sequential(
-            nn.Conv2d(c3, c4, kernel_size=1),
+            nn.Conv2d(c3, c4, kernel_size=1, stride=2),
             nn.BatchNorm2d(c4)
         )
 
@@ -134,6 +134,23 @@ class pneumoniaCNN(nn.Module):
             nn.Dropout(drop_2),
             nn.Linear(hidden_dim, out_features)
         )
+        
+        self._initialize_weights()
+
+    def _initialize_weights(self) -> None:
+        """Kaiming initialization for Conv2d, Constant for BatchNorm2d, Normal for Linear."""
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                if m.bias is not None:
+                    nn.init.zeros_(m.bias)
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.ones_(m.weight)
+                nn.init.zeros_(m.bias)
+            elif isinstance(m, nn.Linear):
+                nn.init.normal_(m.weight, 0, 0.01)
+                if m.bias is not None:
+                    nn.init.zeros_(m.bias)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """Forward pass.
